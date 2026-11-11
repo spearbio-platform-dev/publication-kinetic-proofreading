@@ -1,0 +1,49 @@
+# Kinetic proofreading simulations: figure code
+
+Code for the simulated figures in the SPEAR manuscript and its Supplementary Information.
+
+| Figure | Content | Code |
+|---|---|---|
+| Fig. 1d | Total amplicon versus extension time, 1-step PAG versus 2-step SPEAR | `python/fig_1d_amplicon_kinetics.py` |
+| Fig. S1 | Signal retention during wash steps (wash-based sandwich immunoassay) versus SPEAR | `python/fig_S1_wash_dissociation.py` |
+| Fig. S5 | Achievable LOD versus K_D for allostery-based binders, PAG and SPEAR | `python/fig_S5_lod_vs_kd.py` |
+| Fig. S8a | Definition of LOD (signal, background and their ±σ bands) | `matlab/Script1_Allostery_250108.m`, first figure |
+| Fig. S8b, c | Schematics of competition- and allostery-based assays | Drawn by hand (no code) |
+| Fig. S9 | LOD of competition-based assays as a function of C_E and C_B | `matlab/Script1b_Competition_250108.m`, first section |
+| Fig. S10 | LOD of allostery-based binders | `matlab/Script1_Allostery_250108.m`, second figure (2 × 3 tiles) |
+
+Equation numbers in the code comments refer to the Supplementary Information.
+
+## Python (Figs. 1d, S1, S5)
+
+```bash
+pip install -r requirements.txt
+cd python
+python fig_1d_amplicon_kinetics.py
+python fig_S1_wash_dissociation.py
+python fig_S5_lod_vs_kd.py
+```
+
+Figures are written to `figures/`. With no arguments, each script uses the parameters of the published figure. Each script prints its key numbers and checks them with assertions, for example limiting cases of the closed-form expressions and independence of the normalised curves from analyte concentration.
+
+`fig_S5_lod_vs_kd.py` reads `matlab/Allostery.mat` at start-up. It uses this file to confirm that its independent derivation of the allostery LOD agrees with the MATLAB script.
+
+**Fonts.** Figs. S1 and S5 use Open Sans and Fig. 1d uses Arial. Put `OpenSans-Regular.ttf` and `OpenSans-Bold.ttf` in `fonts/` (or set `FIG_FONT_DIR`). Arial is taken from the macOS system folder (or set `FIG_ARIAL_DIR`). If a font is missing, matplotlib's default sans-serif is used. Only the typeface changes; the curves do not.
+
+**Versions.** The published figures were rendered with numpy, scipy and sympy 1.14. Fig. S5 used matplotlib 3.8.4; Figs. 1d and S1 used matplotlib 3.11.1. Other matplotlib versions give the same curves, with the overall image size differing by a few pixels.
+
+## MATLAB (Figs. S8a, S9, S10)
+
+Run from the `matlab/` folder, which also holds the helper functions `fun_competitive_num.m` and `fun_PlotWithSimpleCI.m`. The scripts need the Symbolic Math Toolbox. The panel letters, and the final crop and layout, were added after export.
+
+- `Script1_Allostery_250108.m`
+  - The first figure is Fig. S8a: K_D = 200 pM, K₁ = 1, C_B = 200 pM, E_in/E_act = 0.01, σ = 0.1.
+  - The second figure is Fig. S10. It also writes `Allostery.mat`, which holds the minimum LOD versus K_D from the last pass of the E_in/E_act loop (E_in/E_act = 10⁻⁴).
+  - Later sections are exploratory and are not used in the paper. The last section calls functions that are not included.
+- `Script1b_Competition_250108.m`
+  - The first section (six tiles) is Fig. S9.
+  - The second section (LOD versus C_B) is exploratory and is not used in the paper.
+
+## License
+
+MIT. See `LICENSE`.
