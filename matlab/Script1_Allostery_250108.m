@@ -1,3 +1,6 @@
+% Figs. S8a (first figure) and S10 (second figure). The second figure also writes
+% Allostery.mat (Fig. S10f data, last pass of the E_in/E_act loop).
+% Requires the Symbolic Math Toolbox and fun_PlotWithSimpleCI.m.
 clear;
 
 %% Equilibrum Concentrations
@@ -9,13 +12,6 @@ eqns_Allostery = [...
     B + Bs + ABs == CB];
 SFn_Allostery = solve(eqns_Allostery,[A B Bs ABs]);
 
-
-%% Compute LOD - B has no signal
-eqns_LOD_Allo_noE0 = [eqns_Allostery,...
-    (K1/(1+K1)*CB*(1+Sigma) == (Bs + ABs)*(1-Sigma))...
-    ];
-SFn_LOD_Allo_noE0 = solve(eqns_LOD_Allo_noE0,[A B Bs ABs CA]);
-MFn_LOD_Allo_noE0 = matlabFunction(SFn_LOD_Allo_noE0.CA);
 
 %% Compute LOD - B has some signal
 eqns_LOD_Allo_whE0 = [eqns_Allostery,...
@@ -193,66 +189,3 @@ sFileName = 'Allostery_v2.png';
 saveas(gcf,sFileName);
 
 save('Allostery.mat','vfKD_fine','vfLOD_AllosteryFine')
-
-%%
-
-fLOD = MFn_LOD_Allo_noE0(fCB,vfK1,vfKD,fSigma);
-
-
-vfConc_Bs = nan(size(vfCA));
-vfConc_ABs = nan(size(vfCA));
-vfConc_Bg = nan(size(vfCA));
-for i = 1:length(vfCA)
-    fConc_CA = vfCA(i);
-    fConc_Bs_Sln = MFn_Bs(fConc_CA,fCB,vfK1,vfKD);
-    fConc_ABs_Sln = MFn_ABs(fConc_CA,fCB,vfK1,vfKD);
-    vfConc_Bs(i) = fConc_Bs_Sln(fConc_Bs_Sln > 0 & fConc_Bs_Sln < fCB);
-    vfConc_ABs(i) = fConc_ABs_Sln(fConc_ABs_Sln > 0 & fConc_ABs_Sln < fCB & fConc_ABs_Sln < fConc_CA);
-    vfConc_Bg(i) = (vfK1/(1+vfK1))*fCB;
-end
-vfConc_Signal = vfConc_Bs + vfConc_ABs;
-
-
-%%
-figure;hold on;
-fSigma = 0.1;
-plot(vfCA,vfConc_Bg,'linewidth',2,'color','b');
-plot(vfCA,vfConc_Bg*(1+fSigma),'--','color','b');
-plot(vfCA,vfConc_Bg*(1-fSigma),'--','color','b');
-
-plot(vfCA,vfConc_ABs,'linewidth',2,'color','g');
-
-
-plot(vfCA,vfConc_Signal,'LineWidth',2,'Color','r');
-plot(vfCA,vfConc_Signal*(1+fSigma),'--','Color','r');
-plot(vfCA,vfConc_Signal*(1-fSigma),'--','Color','r');
-
-plot([fLOD,fLOD],[1e-18,fCB],'-','Color',[0.5 0.5 0.5]);
-
-set(gca,'FontSize',16);
-set(gca,'XScale','log','YScale','log');
-legend({'[B*] (no analyte)','Confidence interval of [B*] (no analyte)','','[B*] + [AB*]','Confidence interval of [B*] + [AB*]'})
-
-%% Study LOD as a function of K1
-
-vf_K1 = logspace(-4,0);
-vf_LOD = arrayfun(@(x)MFn_LOD_Allo_noE0(fCB,x,vfKD,fSigma),vf_K1);
-vf_AppYield = arrayfun(@(x)fun_AppYield(fCB,x,vfKD,fSigma),vf_K1);
-vf_TruYield = arrayfun(@(x)fun_TruYield(fCB,x,vfKD,fSigma),vf_K1);
-
-
-
-figure;hold on;
-yyaxis left
-plot(vf_K1,vf_LOD./vfKD);
-ylabel('LOD/K_D');
-
-yyaxis right
-plot(vf_K1,vf_AppYield);
-plot(vf_K1,vf_TruYield);
-ylabel('Yield');
-
-set(gca,'XScale','log','FontSize',16);
-xlabel('K_1');
-legend({'LOD','Apparent Yield','True Yield'});
-

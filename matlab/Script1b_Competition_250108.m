@@ -1,3 +1,5 @@
+% Fig. S9. Requires the Symbolic Math Toolbox, fun_competitive_num.m and
+% fun_PlotWithSimpleCI.m.
 clear;
 
 vfCA = logspace(-14,-6);
@@ -54,58 +56,3 @@ for ii = 1:6
         'Location','best',...
         'Interpreter','latex');
 end
-
-%%
-
-vfKD = [200e-12, 1e-9 ];
-raKD = {'200 pM','1 nM'};
-vfCE = [...
-    200e-12;
-    50e-12;
-    10e-12;
-    2e-12];
-raCB_FineGrain = cell(4,2);
-raLOD = cell(4,2);
-for i_KD = 1:length(vfKD)
-    fKD = vfKD(i_KD);
-    fKDE = fKD;
-    for i_CE = 1:length(vfCE)
-        fCE = vfCE(i_CE);
-        vfCB_FineGrain = logspace(log10(fCE),log10(100*fCE));
-        raCB_FineGrain{i_CE,i_KD} = vfCB_FineGrain;
-        raLOD{i_CE,i_KD} = nan(1,50);
-        for j = 1:length(vfCB_FineGrain)
-            fprintf('i_CE = %u;j = %u\n',i_CE, j);
-            fCB = vfCB_FineGrain(j);
-            vfSig_True = fun_competitive_num(vfCA,[fCB, fCE, fKD, fKDE]);
-            fSig_Bkgd = fun_competitive_num(0,[fCB, fCE, fKD, fKDE]);
-            iIdxGuess = find(vfSig_True*(1-fSigma) - fSig_Bkgd*(1+fSigma) > 0,1,'first');
-            if ~isempty(iIdxGuess)
-                g = @(x)(fun_competitive_num(x,[fCB, fCE, fKD, fKDE])*(1-fSigma) - fSig_Bkgd*(1+fSigma));
-                raLOD{i_CE,i_KD}(j) = fzero(g,vfCA(iIdxGuess));
-            end
-        end
-    end
-end
-%%
-for i_KD = 1:length(vfKD)    
-    hCounter = hCounter + 1;
-    vhA(hCounter) = nexttile;
-    hold on;
-
-    for i_CE = 1:length(vfCE)
-        vfCB_FineGrain = raCB_FineGrain{i_CE,i_KD};
-        vfLOD = raLOD{i_CE,i_KD};
-        plot(vhA(hCounter),vfCB_FineGrain,vfLOD,'-o','LineWidth',2,'Color',xiColors(i_CE,:));
-        plot([min(vfCB_FineGrain),max(vfCB_FineGrain)],[min(vfLOD),min(vfLOD)],'--','Color',xiColors(i_CE,:));
-    end
-    set(vhA(hCounter),'Fontsize',12);
-    set(vhA(hCounter),'xlim',[min(cellfun(@(x)min(x),raCB_FineGrain)),max(cellfun(@(x)min(x),raCB_FineGrain))]);
-    legend(vhA(hCounter),{'$C_E$ = 200 pM','','$C_E$ = 50 pM','','$C_E$ = 10 pM','','$C_E$ = 2 pM'},'Interpreter','latex');
-    title(sprintf('$K_D$ = %s\n $\\Rightarrow$ min. LOD = %.1f pM',raKD{i_KD},min(min(xfLOD))*1e12),'Interpreter','latex');
-    xlabel('$C_B$ (M)','Interpreter','latex');
-    ylabel('LOD (M)','Interpreter','latex');
-end
-
-
-
